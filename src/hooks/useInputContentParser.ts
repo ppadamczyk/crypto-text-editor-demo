@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as C from './constants';
 import { apiRequestHandler, getMarksToReplace } from './helpers';
-import { getCurrencies } from '../store/selectors';
+import { getCurrencies, isThereAnyErrorInStore } from '../store/selectors';
 import { addCurrencyToStore, addError, removeAllErrors, updateCurrencyPriceInfo } from '../store/actions';
 import { ApplicationState, CurrenciesState, Currency, ErrorType } from '../store/constants';
 
@@ -21,6 +21,7 @@ const useInputContentParser = () => {
    const [outputContent, setOutputContent] = useState<string>('');
    const symbolsMarkedAsIncorrect = useRef<string[]>([]);
    const currenciesInStore = useSelector<ApplicationState, CurrenciesState>(getCurrencies);
+   const isAnyErrorPresent = useSelector<ApplicationState, boolean>(isThereAnyErrorInStore);
    
    const dispatch = useDispatch();
 
@@ -60,7 +61,10 @@ const useInputContentParser = () => {
          });
 
    const establishOutputContent = (inputContent: string) => {
-      dispatch(removeAllErrors());
+      if (isAnyErrorPresent) {
+         dispatch(removeAllErrors());
+      }
+
       let transformedContent = inputContent;
       const marksToReplace = getMarksToReplace(transformedContent);
 
