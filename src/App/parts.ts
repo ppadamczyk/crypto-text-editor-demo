@@ -25,6 +25,10 @@ export const TextArea = styled.textarea`
    :focus {
       border: 1px solid #0082fa;
    }
+
+   :disabled {
+      color: black;
+   }
 `;
 
 export const TitleWrapper = styled.div`
