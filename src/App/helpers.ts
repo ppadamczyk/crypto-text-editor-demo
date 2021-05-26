@@ -11,3 +11,4 @@ export const getMarksToReplace = (inputContent: string) => {
    return functionToReplace;
 }
 
+export const apiRequestHandler = (path: string) => fetch(path).then((response) => response.json());
