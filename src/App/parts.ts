@@ -13,7 +13,7 @@ export const AppWrapper = styled.div`
 
 export const TextArea = styled.textarea`
    ${commonStyles}
-   height: 500px;
+   height: 350px;
    width: 45%;
    opacity: 1;
    padding: 8px;
@@ -33,7 +33,7 @@ export const TitleWrapper = styled.div`
    justify-content: center;
    align-items: center;
    width: 40%;
-   height: 100px;
+   height: 50px;
    margin: 20px 0;
 `;
 
@@ -48,22 +48,8 @@ export const TextAreasWrapper = styled.div`
    width: 80%;
 `;
 
-export const ErrorLog = styled.div`
-   ${commonStyles}
-   width: 40%;
-   height: 140px;
-   margin-top: 20px;
-   padding: 0 10px;
-`;
-
 export const Header = styled.h2`
    font-weight: normal;
    margin: 5px 0;
    text-align: center;
 `;
-
-export const Paragraph = styled.p`
-   margin: 2px 0;
-`;
-
-

@@ -10,3 +10,12 @@ export const updateCurrencyPriceInfo = (symbol: string, priceInfo: C.CurrencyPri
    symbol,
    priceInfo,
 });
+
+export const addError = (error: C.Error) => ({
+   type: C.ActionType.AddError,
+   error,
+});
+
+export const removeAllErrors = () => ({
+   type: C.ActionType.RemoveAllErrors,
+});
