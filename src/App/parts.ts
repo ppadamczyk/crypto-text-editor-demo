@@ -29,6 +29,12 @@ export const TextArea = styled.textarea`
    :disabled {
       color: black;
    }
+
+   @media (max-width: 700px) {
+      width: 100%;
+      height: 150px;
+      margin-bottom: 10px;
+   }
 `;
 
 export const TitleWrapper = styled.div`
@@ -39,6 +45,7 @@ export const TitleWrapper = styled.div`
    width: 40%;
    height: 50px;
    margin: 20px 0;
+   min-width: 270px;
 `;
 
 export const Title = styled.h1`
@@ -50,6 +57,12 @@ export const TextAreasWrapper = styled.div`
    display: flex;
    justify-content: space-evenly;
    width: 80%;
+
+   @media (max-width: 700px) {
+      flex-direction: column;
+      align-items: center;
+      min-width: 252px;
+   }
 `;
 
 export const Header = styled.h2`
