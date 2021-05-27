@@ -1,22 +1,11 @@
 import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as C from './constants';
-import { apiRequestHandler, getMarksToReplace } from './helpers';
+import { apiRequestHandler } from './helpers';
 import { getCurrencies, isThereAnyErrorInStore } from '../store/selectors';
+import { ApplicationState, CurrenciesState, ErrorType, SingleCurrencyState } from '../store/constants';
 import { addCurrencyToStore, addError, removeAllErrors, updateCurrencyPriceInfo } from '../store/actions';
-import { ApplicationState, CurrenciesState, Currency, ErrorType } from '../store/constants';
 
-/*
-   This hook encapsulates content parsing logic and optimize it so each cryptocurrency
-   is fetched only once* based on symbol given in the editor:
-      1. If it was already fetched get it from store.
-      2. If not, fetch info from API (use search method due to lack of coins/symbol endpoint).
-      3. If there is no such cryptocurrency:
-         a) save it as incorrect and never fetch it again.
-         b) return error and parse mark as INCORRECT_SYMBOL.
-      
-   * - once for each method-symbol set.
-*/
 const useInputContentParser = () => {
    const [outputContent, setOutputContent] = useState<string>('');
    const symbolsMarkedAsIncorrect = useRef<string[]>([]);
@@ -30,71 +19,76 @@ const useInputContentParser = () => {
       return C.incorrectArgumentError;
    }
 
-   const getCurrencyFromStoreOrAPI = async (symbol: string) => {
-      // If given symbol is already marked as incorrect handle it as error skipping API request
-      if (symbolsMarkedAsIncorrect.current.includes(symbol)) {
-         return handleIncorrectSymbol(symbol);
-      }
-
-      return currenciesInStore?.[symbol]
-         ? currenciesInStore[symbol]
-         : apiRequestHandler(`https://api.coinpaprika.com/v1/search?q=${symbol}&c=currencies&modifier=symbol_search&limit=1`)
-            .catch((error) => dispatch(addError({ errorType: ErrorType.ApiResponseErrors, errorMessage: error.error })))
-            .then((responseAsJSON) => {
-               if (responseAsJSON?.currencies?.[0]) {
-                  dispatch(addCurrencyToStore(responseAsJSON.currencies[0]));
-                  return responseAsJSON.currencies[0];
-               } else {
-                  symbolsMarkedAsIncorrect.current.push(symbol);
-                  return handleIncorrectSymbol(symbol);
-               }
-            });
-   } 
-
-   const getPriceInUSDFromStoreOrAPI = async (currency: Currency) => currenciesInStore?.[currency.symbol]?.price
-      ? currenciesInStore[currency.symbol]
-      : apiRequestHandler(`https://api.coinpaprika.com/v1/price-converter?base_currency_id=${currency.id}&quote_currency_id=usd-us-dollars&amount=1`)
+   // If given currency already exists in store return it, otherwise request it from API
+   const getCurrencyFromStoreOrAPI = async (symbol: string) => currenciesInStore[symbol]
+      ?? apiRequestHandler(`https://api.coinpaprika.com/v1/search?q=${symbol}&c=currencies&modifier=symbol_search&limit=1`)
          .catch((error) => dispatch(addError({ errorType: ErrorType.ApiResponseErrors, errorMessage: error.error })))
          .then((responseAsJSON) => {
-            dispatch(updateCurrencyPriceInfo(currency.symbol, responseAsJSON));
-            return responseAsJSON;
+            if (responseAsJSON?.currencies?.[0]) {
+               dispatch(addCurrencyToStore(responseAsJSON.currencies[0]));
+               return responseAsJSON.currencies[0];
+            } else {
+               symbolsMarkedAsIncorrect.current.push(symbol);
+               return handleIncorrectSymbol(symbol);
+            }
          });
-
+   
+   const getPriceInUSDFromStoreOrAPI = async (symbol: string) => getCurrencyFromStoreOrAPI(symbol)
+      .then((currency: SingleCurrencyState) => currency?.id
+         ? (currenciesInStore[currency.symbol]?.price
+            ? currenciesInStore[currency.symbol]
+            : apiRequestHandler(`https://api.coinpaprika.com/v1/price-converter?base_currency_id=${currency.id}&quote_currency_id=usd-us-dollars&amount=1`)
+               .catch((error) => dispatch(addError({ errorType: ErrorType.ApiResponseErrors, errorMessage: error.error })))
+               .then((responseAsJSON) => {
+                  dispatch(updateCurrencyPriceInfo(currency.symbol, responseAsJSON));
+                  return responseAsJSON;
+               })
+         ) : currency);
+   
    const establishOutputContent = (inputContent: string) => {
       if (isAnyErrorPresent) {
          dispatch(removeAllErrors());
       }
 
-      let transformedContent = inputContent;
-      const marksToReplace = getMarksToReplace(transformedContent);
+      let capturedMark;
+      const functionsToExecute = [];
+      
+      while ((capturedMark = C.marksMatcher.exec(inputContent)) !== null) {
+         const [_inputContent, functionName, argument] = capturedMark;
+         const argumentInUpperCase = argument.toUpperCase();
 
-      // skip mark-transforming logic if there are no marks
-      if (!marksToReplace.length) {
-         setOutputContent(transformedContent);
-         return;
-      }
+         // If given symbol is already marked as incorrect handle it as error and skip API request
+         if (symbolsMarkedAsIncorrect.current.includes(argumentInUpperCase)) {
+            functionsToExecute.push(handleIncorrectSymbol(argumentInUpperCase));
+            continue;
+         }
 
-      marksToReplace.forEach((mark) => {
-         const textFromMarkMatcher = /{{ ([a-zA-Z]*)\/([a-zA-Z]*) }}/gi;
-         const [_mark, replacementFunction, symbol] = textFromMarkMatcher.exec(mark) ?? [];
-
-         switch (replacementFunction.toUpperCase()) {
+         switch (functionName.toLocaleLowerCase()) {
             case C.SupportedFunctions.Name: {
-               getCurrencyFromStoreOrAPI(symbol.toUpperCase())
-                  .then((currency) => setOutputContent(transformedContent = transformedContent.replace(mark, currency.name)));
-                  break;
+               functionsToExecute.push(getCurrencyFromStoreOrAPI(argumentInUpperCase));
+               break;
             }
             case C.SupportedFunctions.Price: {
-               getCurrencyFromStoreOrAPI(symbol.toUpperCase())
-                  .then((currency) => currency?.id ? getPriceInUSDFromStoreOrAPI(currency) : currency)
-                  .then((currency) => setOutputContent(transformedContent = transformedContent.replace(mark, currency.price)));
-                  break;
+               functionsToExecute.push(getPriceInUSDFromStoreOrAPI(argumentInUpperCase));
+               break;
             }
             default:
-               dispatch(addError({ errorType: ErrorType.IncorrectFunctions, errorMessage: replacementFunction }));
-               setOutputContent(transformedContent = transformedContent.replace(mark, C.incorrectFunctionName));
+               functionsToExecute.push({});
+               dispatch(addError({ errorType: ErrorType.IncorrectFunctions, errorMessage: functionName }));
          }
-      })
+      }
+      
+      Promise.all(functionsToExecute).then((functionsResults) => {
+         let transformedContent = inputContent;
+
+         functionsResults.forEach((functionResult) => {
+            transformedContent = transformedContent.replace(
+               C.markReplacementMatcher,
+               (_match: string, capturedFunction: string) => functionResult[capturedFunction.toLocaleLowerCase()] ?? C.incorrectFunctionName)
+         });
+
+         setOutputContent(transformedContent)
+      });
    }
 
    return {

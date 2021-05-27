@@ -21,7 +21,7 @@ const App: React.FC = () => {
          <P.TextArea
             placeholder={'Input'}
             value={inputContent}
-            onChange={(e) => handleContentChange(e)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleContentChange(e)}
          />
          <P.TextArea
             disabled

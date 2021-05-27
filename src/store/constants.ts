@@ -42,7 +42,7 @@ export interface CurrencyPriceInfo {
    quote_currency_name?: string;
    quote_price_last_updated?: string;
    amount?: number;
-   price?: number;
+   price?: number | string;
 }
 
 export const initialState: ApplicationState = {
@@ -50,7 +50,7 @@ export const initialState: ApplicationState = {
    errors: {},
 };
 
-type SingleCurrencyState = Currency & CurrencyPriceInfo;
+export type SingleCurrencyState = Currency & CurrencyPriceInfo;
 
 export enum ActionType {
    AddCurrencyToStore = 'ADD_CURRENCY_TO_STORE',
