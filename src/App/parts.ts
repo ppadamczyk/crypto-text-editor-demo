@@ -26,10 +26,6 @@ export const TextArea = styled.textarea`
       border: 1px solid #0082fa;
    }
 
-   :disabled {
-      color: black;
-   }
-
    @media (max-width: 700px) {
       width: 100%;
       height: 150px;

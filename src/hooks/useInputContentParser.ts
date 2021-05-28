@@ -1,51 +1,37 @@
 import { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as C from './constants';
-import { apiRequestHandler } from './helpers';
-import { getCurrencies, isThereAnyErrorInStore } from '../store/selectors';
-import { ApplicationState, CurrenciesState, ErrorType, SingleCurrencyState } from '../store/constants';
-import { addCurrencyToStore, addError, removeAllErrors, updateCurrencyPriceInfo } from '../store/actions';
+import useStoreAndAPIHandler from './useStoreAndAPIHandler';
+import { isThereAnyErrorInStore } from '../store/selectors';
+import { addError, removeAllErrors } from '../store/actions';
+import { ApplicationState, ErrorType } from '../store/constants';
 
 const useInputContentParser = () => {
    const [outputContent, setOutputContent] = useState<string>('');
-   const symbolsMarkedAsIncorrect = useRef<string[]>([]);
-   const currenciesInStore = useSelector<ApplicationState, CurrenciesState>(getCurrencies);
+   const [isLoading, setIsLoading] = useState<boolean>(false);
    const isAnyErrorPresent = useSelector<ApplicationState, boolean>(isThereAnyErrorInStore);
+
+   const throttle = useRef<NodeJS.Timer>();
    
    const dispatch = useDispatch();
+   const { getCurrencyFromStoreOrAPI, getPriceInUSDFromStoreOrAPI } = useStoreAndAPIHandler();
 
-   const handleIncorrectSymbol = (symbol: string) => {
-      dispatch(addError({ errorType: ErrorType.IncorrectArguments, errorMessage: symbol }));
-      return C.incorrectArgumentError;
-   }
-
-   // If given currency already exists in store return it, otherwise request it from API
-   const getCurrencyFromStoreOrAPI = async (symbol: string) => currenciesInStore[symbol]
-      ?? apiRequestHandler(`https://api.coinpaprika.com/v1/search?q=${symbol}&c=currencies&modifier=symbol_search&limit=1`)
-         .catch((error) => dispatch(addError({ errorType: ErrorType.ApiResponseErrors, errorMessage: error.error })))
-         .then((responseAsJSON) => {
-            if (responseAsJSON?.currencies?.[0]) {
-               dispatch(addCurrencyToStore(responseAsJSON.currencies[0]));
-               return responseAsJSON.currencies[0];
-            } else {
-               symbolsMarkedAsIncorrect.current.push(symbol);
-               return handleIncorrectSymbol(symbol);
-            }
-         });
-   
-   const getPriceInUSDFromStoreOrAPI = async (symbol: string) => getCurrencyFromStoreOrAPI(symbol)
-      .then((currency: SingleCurrencyState) => currency?.id
-         ? (currenciesInStore[currency.symbol]?.price
-            ? currenciesInStore[currency.symbol]
-            : apiRequestHandler(`https://api.coinpaprika.com/v1/price-converter?base_currency_id=${currency.id}&quote_currency_id=usd-us-dollars&amount=1`)
-               .catch((error) => dispatch(addError({ errorType: ErrorType.ApiResponseErrors, errorMessage: error.error })))
-               .then((responseAsJSON) => {
-                  dispatch(updateCurrencyPriceInfo(currency.symbol, responseAsJSON));
-                  return responseAsJSON;
-               })
-         ) : currency);
-   
    const establishOutputContent = (inputContent: string) => {
+      if (!isLoading) {
+         setIsLoading(true);
+      }
+
+      if (throttle.current) {
+         clearTimeout(throttle.current);
+      }
+
+      // Throttle used to delay parsing until user stop typing
+      throttle.current = global.setTimeout(() => {
+         parseInputContent(inputContent);
+      }, 250);
+   };
+
+   const parseInputContent = (inputContent: string) => {
       if (isAnyErrorPresent) {
          dispatch(removeAllErrors());
       }
@@ -56,12 +42,6 @@ const useInputContentParser = () => {
       while ((capturedMark = C.marksMatcher.exec(inputContent)) !== null) {
          const [_inputContent, functionName, argument] = capturedMark;
          const argumentInUpperCase = argument.toUpperCase();
-
-         // If given symbol is already marked as incorrect handle it as error and skip API request
-         if (symbolsMarkedAsIncorrect.current.includes(argumentInUpperCase)) {
-            functionsToExecute.push(handleIncorrectSymbol(argumentInUpperCase));
-            continue;
-         }
 
          switch (functionName.toLocaleLowerCase()) {
             case C.SupportedFunctions.Name: {
@@ -88,11 +68,13 @@ const useInputContentParser = () => {
          });
 
          setOutputContent(transformedContent)
+         setIsLoading(false);
       });
    }
 
    return {
       outputContent,
+      isLoading,
       establishOutputContent,
    }
 }
