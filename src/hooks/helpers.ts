@@ -1,1 +1,0 @@
-export const apiRequestHandler = (path: string) => fetch(path).then((response) => response.json());

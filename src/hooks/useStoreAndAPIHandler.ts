@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as C from './constants';
-import { apiRequestHandler } from './helpers';
 import { getCurrencies } from '../store/selectors';
 import { addCurrencyToStore, addError, updateCurrencyPriceInfo } from '../store/actions';
 import { ApplicationState, CurrenciesState, ErrorType, SingleCurrencyState } from '../store/constants';
@@ -10,6 +9,8 @@ const useStoreAndAPIHandler = () => {
    const symbolsMarkedAsIncorrect = useRef<string[]>([]);
    const currenciesInStore = useSelector<ApplicationState, CurrenciesState>(getCurrencies);
    const dispatch = useDispatch();
+
+   const apiRequestHandler = (path: string) => fetch(path).then((response) => response.json());
 
    // If given currency already exists in store return it, otherwise request it from API
    const getCurrencyFromStoreOrAPI = async (symbol: string) => {
