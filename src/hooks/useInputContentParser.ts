@@ -53,7 +53,7 @@ const useInputContentParser = () => {
                break;
             }
             default:
-               functionsToExecute.push({});
+               functionsToExecute.push({ [functionName.toLocaleLowerCase()]: C.incorrectFunctionName});
                dispatch(addError({ errorType: ErrorType.IncorrectFunctions, errorMessage: functionName }));
          }
       }
@@ -64,7 +64,7 @@ const useInputContentParser = () => {
          functionsResults.forEach((functionResult) => {
             transformedContent = transformedContent.replace(
                C.markReplacementMatcher,
-               (_match: string, capturedFunction: string) => functionResult[capturedFunction.toLocaleLowerCase()] ?? C.incorrectFunctionName)
+               (_match: string, capturedFunction: string) => functionResult[capturedFunction.toLocaleLowerCase()])
          });
 
          setOutputContent(transformedContent)

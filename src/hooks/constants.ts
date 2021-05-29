@@ -3,7 +3,7 @@ export enum SupportedFunctions {
    Price = 'price',
 }
 
-export const incorrectFunctionName = 'INCORRECT_FUNCTION_NAME';
+export const incorrectFunctionName = 'INCORRECT_FUNCTION';
 
 export const incorrectArgumentError = {
    id: 'INCORRECT_SYMBOL',
