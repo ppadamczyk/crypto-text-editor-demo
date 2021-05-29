@@ -16,7 +16,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ value, isLoading }) => (
       />
       {isLoading && (
          <P.LoaderOverlay>
-            <P.LoaderInfo>{'Loading...'}</P.LoaderInfo>
+            <P.LoaderInfo>{'Parsing...'}</P.LoaderInfo>
             <P.Loader />
          </P.LoaderOverlay>
       )}

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as C from './constants';
 import { getCurrencies } from '../store/selectors';
 import { addCurrencyToStore, addError, updateCurrencyPriceInfo } from '../store/actions';
-import { ApplicationState, CurrenciesState, ErrorType, SingleCurrencyState } from '../store/constants';
+import { ApplicationState, CurrenciesState, ErrorType } from '../store/constants';
 
 const useStoreAndAPIHandler = () => {
    const symbolsMarkedAsIncorrect = useRef<string[]>([]);
@@ -13,7 +13,7 @@ const useStoreAndAPIHandler = () => {
    const apiRequestHandler = (path: string) => fetch(path).then((response) => response.json());
 
    // If given currency already exists in store return it, otherwise request it from API
-   const getCurrencyFromStoreOrAPI = async (symbol: string) => {
+   const getCurrencyFromStoreOrAPI = (symbol: string) => {
 
       // If given symbol is already marked as incorrect handle it as error and skip API request
       if (symbolsMarkedAsIncorrect.current.includes(symbol)) {
@@ -36,8 +36,10 @@ const useStoreAndAPIHandler = () => {
             })
       };
    
-   const getPriceInUSDFromStoreOrAPI = async (symbol: string) => getCurrencyFromStoreOrAPI(symbol)
-      .then((currency: SingleCurrencyState) => currency?.id
+   const getPriceInUSDFromStoreOrAPI = (symbol: string) => {
+      const currency = getCurrencyFromStoreOrAPI(symbol);
+
+      return currency?.id
          ? (currenciesInStore[currency.symbol]?.price
             ? currenciesInStore[currency.symbol]
             : apiRequestHandler(`https://api.coinpaprika.com/v1/price-converter?base_currency_id=${currency.id}&quote_currency_id=usd-us-dollars&amount=1`)
@@ -46,9 +48,9 @@ const useStoreAndAPIHandler = () => {
                   dispatch(updateCurrencyPriceInfo(currency.symbol, responseAsJSON));
                   return responseAsJSON;
                })
-         ) : currency);
-
-   
+         ) : currency;
+   }
+      
    return {
       getCurrencyFromStoreOrAPI,
       getPriceInUSDFromStoreOrAPI,

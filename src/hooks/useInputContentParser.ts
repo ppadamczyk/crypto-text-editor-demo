@@ -27,15 +27,15 @@ const useInputContentParser = () => {
 
       // Throttle used to delay parsing until user stop typing
       throttle.current = global.setTimeout(() => {
+         if (isAnyErrorPresent) {
+            dispatch(removeAllErrors());
+         }
+
          parseInputContent(inputContent);
       }, 250);
    };
 
    const parseInputContent = (inputContent: string) => {
-      if (isAnyErrorPresent) {
-         dispatch(removeAllErrors());
-      }
-
       let capturedMark;
       const functionsToExecute = [];
       
