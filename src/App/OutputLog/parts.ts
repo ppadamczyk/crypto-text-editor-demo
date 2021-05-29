@@ -11,23 +11,21 @@ export const OutputLogWrapper = styled.div`
    @media (max-width: 700px) {
       width: 100%;
       height: 150px;
-      margin-bottom: 10px;
    }
 `;
 
-export const TextArea = styled.textarea`
-   height: 100%;
+export const TextArea = styled.textarea<{ hasOverlay?: boolean }>`
+   height: calc(100% - 16px);
    width: 100%;
-   padding: 0;
+   padding: 8px;
+   opacity: ${({ hasOverlay }) => hasOverlay ? 0.1 : 1};
 
    :disabled {
       color: black;
    }
 `;
 
-export const LoaderInfo = styled.p`
-   margin-bottom: 30px;
-`;
+export const LoaderInfo = styled.p``;
 
 export const LoaderOverlay = styled.div`
    height: 100%;
@@ -39,20 +37,26 @@ export const LoaderOverlay = styled.div`
    flex-direction: column;
    justify-content: center;
    align-items: center;
-   background-color: #EFEFEF;
    z-index: 2;
 `;
 
 export const Loader = styled.div`
-   border: 16px solid #EFEFEF;
-   border-top: 16px solid white;
+   border: 16px solid white;
+   border-top: 16px solid #0082fa;
    border-radius: 50%;
    width: 80px;
    height: 80px;
    animation: spin 2s linear infinite;
+   margin-top: 30px;
  
    @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+   }
+
+   @media (max-width: 700px) {
+      width: 30px;
+      height: 30px;
+      margin-top: 10px;
    }
 `;

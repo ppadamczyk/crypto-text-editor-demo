@@ -16,7 +16,7 @@ const App: React.FC = () => {
   return (
     <P.AppWrapper>
       <P.TitleWrapper>
-         <P.Title title={'CryptoEditorDemo'}>CryptoEditorDemo</P.Title>
+         <P.Title title={'CryptoEditorDemo'}>{'CryptoEditorDemo'}</P.Title>
       </P.TitleWrapper>
       <P.TextAreasWrapper>
          <P.TextArea

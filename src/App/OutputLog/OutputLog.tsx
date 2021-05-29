@@ -12,6 +12,7 @@ const OutputLog: React.FC<OutputLogProps> = ({ value, isLoading }) => (
          disabled
          placeholder={'Output'}
          value={value}
+         hasOverlay={isLoading}
       />
       {isLoading && (
          <P.LoaderOverlay>

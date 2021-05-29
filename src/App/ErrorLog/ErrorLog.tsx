@@ -9,7 +9,7 @@ const ErrorLog: React.FC = () => {
 
    return (
       <P.ErrorLogWrapper>
-         <P.Header>Error Log</P.Header>
+         <P.Header>{'Error Log'}</P.Header>
          {Object.keys(errorMessages).map((errorCategory) => (
             <P.Error key={errorCategory}>
                {`${errorCategory}: ${errorMessages[errorCategory as ErrorType]}`}
