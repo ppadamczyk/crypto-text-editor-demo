@@ -1,46 +1,28 @@
-# Getting Started with Create React App
+# CryptoEditorDemo
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project was created as a part of the recruitment process to provide some skill overview.
 
-## Available Scripts
+## Project background
 
-In the project directory, you can run:
+### Overview
 
-### `npm start`
+It's a simple text editor which parse text inputed by the user and replace markdown-like marks with information about cryptocurrencies fetched from https://api.coinpaprika.com, based on the function and argument in the mark by the user.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Proper mark format: `{{ [function_name]/[argument] }}`
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Supported functions:
+| Function       | Argument           | Description  |
+|:------------- |:-------------|:-----|
+| Name      | symbol (ex. BTC / DOGE) | replace marker with cryptocurrency name |
+| Price      | symbol (ex. BTC / DOGE)      |   replace marker with up-to-date cryptocurrency value in USD |
 
-### `npm test`
+**Errors will be handled by replacing mark with "INCORRECT_FUNCTION" and "INCORRECT_SYMBOL" placeholders.**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### How it works
 
-### `npm run build`
+Every change of input data trigger parser (with 250ms throttle) which finds all marks within provided input text, and executes provided functions with given arguments. The first occurence of unique function-argument set will result in data fetch Redux store update - that data will be used next time to avoid sending redundant requests. If user pass an invalid function name the whole mark will be replaced with "INCORRECT_FUNCTION" string and new error will be added to ErrorLog. If user pass valid function name but API will not recognize passed argument as valid it will also be replaced by an error sting: "INCORRECT_SYMBOL", beside that, passed argument will be stored by the application and marked as incorrectSymbol. Any marks containing argument marked as incorrectSymbol will be replaced by an error sting: "INCORRECT_SYMBOL" - API request will be skipped to optimize the performance.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Example input data
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+In 1998, Wei Dai published a description of "b-money", characterized as an anonymous, distributed electronic cash system.[Shortly thereafter, Nick Szabo described bit gold. Like {{ Name/BTC }} and other cryptocurrencies that would follow it, bit gold (not to be confused with the later gold-based exchange, {{ Name/BITGOLD }}) was described as an electronic currency system which required users to complete a proof of work function with solutions being cryptographically put together and published. A currency system based on a reusable proof of work was later created by Hal Finney who followed the work of Dai and Szabo.
+The first decentralized cryptocurrency, {{ Name/BTC }}, was created in 2009 by pseudonymous developer Satoshi Nakamoto. It used SHA-256, a cryptographic hash function, as its proof-of-work scheme. In April 2011, {{ Name/NMC }} was created as an attempt at forming a decentralized DNS, which would make internet censorship very difficult. Soon after, in October 2011, {{ Name/LTC }} was released. It was the first successful cryptocurrency to use scrypt as its hash function instead of SHA-256. Another notable cryptocurrency, {{ Name/PPC }} was the first to use a proof-of-work/proof-of-stake hybrid.
